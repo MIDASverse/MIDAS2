@@ -15,12 +15,12 @@ One major difference is that this version more closely follows the sklearn API, 
 import MIDAS2 as md
 
 # Create a MIDAS object
-md.MIDAS()
+mod = md.MIDAS()
 
 # Fit the model to data
-md.fit(X, epochs = 10)
+mod.fit(X, epochs = 10)
 
 # Multiply impute missing data
-X_imputed = md.transform(X, m = 10)
+X_imputed = mod.transform(X, m = 10)
 ```
 
