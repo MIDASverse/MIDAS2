@@ -2,9 +2,9 @@
 
 Work in progress implementation of MIDAS in pytorch.
 
-In addition to migrating to `torch`, this new version:
+In addition to migrating to `torch`, this new version adds the following functionality:
 
-* MIDAS models can be fit on `X` and used to impute on new data `X'`
+* Models can be fit on `X` and used to impute on new data `X'`
 * Automatic detection of column-types 
 
 ## Example usage
