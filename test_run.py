@@ -1,9 +1,11 @@
+'''Test MIDAS2 pipeline'''
+
+import random
+import torch
 import numpy as np
 import pandas as pd
 
 import MIDAS2 as md
-import torch
-import random
 
 np.random.seed(89)
 torch.manual_seed(89)
@@ -25,7 +27,7 @@ data['xc2'] = np.where(data['xn'] > 0 , 'a', 'b')
 
 for col in data.columns:
     data[col] = np.where(np.random.uniform(0,1,n) < 0.1, np.nan, data[col])
-    
+
 data.iloc[0,1] = np.nan
 
 torch.manual_seed(89)
@@ -36,4 +38,3 @@ a = mod.transform(m=5)
 
 for df in a:
     print(df.loc[0,'xc'])
-    

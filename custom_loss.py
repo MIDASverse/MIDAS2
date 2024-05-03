@@ -1,4 +1,7 @@
+'''Define loss functions that allow mixed outcome types and masked loss computation.'''
+
 import torch
+from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 
 def _mixed_loss(
     pred: torch.tensor, 
@@ -12,22 +15,27 @@ def _mixed_loss(
     '''
     Compute the loss of a batch taking into account the different column types. 
     
-    '''
-    
+    ''' 
     losses = []
     c = 0
-    for i, col in enumerate(col_types):
+    for _, col in enumerate(col_types):
         if col == 'num':
-            losses.append(num_adj*torch.nn.MSELoss(reduction = 'none')(pred[:,c], target[:,c]))
+            losses.append(num_adj*MSELoss(reduction = 'none')(pred[:,c], target[:,c]))
             c += 1
         elif col == 'bin':
-            losses.append(bin_adj*torch.nn.BCEWithLogitsLoss(reduction = 'none')(pred[:,c], target[:,c]))
+            losses.append(
+                bin_adj*BCEWithLogitsLoss(reduction = 'none')(pred[:,c], target[:,c])
+            )
             c += 1
         elif col == 'pos':
-            losses.append(pos_adj*torch.nn.MSELoss(reduction = 'none')(pred[:,c], target[:,c]))
+            losses.append(
+                pos_adj*MSELoss(reduction = 'none')(pred[:,c], target[:,c])
+            )
             c += 1
         elif isinstance(col, int):
-            losses.append(cat_adj*torch.nn.CrossEntropyLoss(reduction = 'none')(pred[:,c:c+col], target[:,c:c+col]))
+            losses.append(
+                cat_adj*CrossEntropyLoss(reduction = 'none')(pred[:,c:c+col], target[:,c:c+col])
+            )
             c += col
         else:
             raise ValueError(f"Unknown column type: {col}")
@@ -40,10 +48,7 @@ def _masked_loss(mixed_losses, mask):
     Consolidate loss for only observed data points.
     
     '''
-    
-    # sanity check
     if mixed_losses.shape != mask.shape:
         raise ValueError("Mixed losses and mask must have the same shape.")
-    
     loss = torch.sum(mixed_losses*mask.float())/torch.sum(mask)
     return loss
