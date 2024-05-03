@@ -13,16 +13,17 @@ class MIDAS(torch.nn.Module):
     
     Parameters:
     
-    hidden_layers: The number of nodes in each hidden encoder layer. The node sizes are reversed for the decoder portion.
+    hidden_layers: The number of nodes in each hidden encoder layer. 
+        The node sizes are reversed for the decoder portion.
     dropout_prob: The dropout probability for each hidden layer
     
     Notes:
     
-    MIDAS(2) follows the sklearn pipeline. You first declare an imputation model, .fit() it to your data,
-    then .transform(m) to return m imputed datasets. You can use .fit_transform() to do both at once.
-    
+    MIDAS(2) follows the sklearn pipeline. You first declare an 
+    imputation model, .fit() it to your data, then .transform(m) to 
+    return m imputed datasets. You can use .fit_transform() 
+    to do both at once.    
     '''
-    
     def __init__(
         self, 
         hidden_layers: list[int] = [256,128,64], 
