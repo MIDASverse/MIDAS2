@@ -1,6 +1,6 @@
 # MIDAS(2)
 
-Work in progress implementation of MIDAS in pytorch.
+**Work in progress** implementation of MIDAS in pytorch.
 
 In addition to migrating to `torch`, this new version adds the following functionality:
 
