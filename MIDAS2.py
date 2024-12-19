@@ -1,4 +1,4 @@
-'''Main class for MIDAS imputer'''
+"""Main class for MIDAS imputer"""
 
 import random
 from typing import Generator
@@ -7,9 +7,9 @@ import torch
 import numpy as np
 import pandas as pd
 
-from mixed_activation import MixedActivation
-from dataset import Dataset
-from custom_loss import _mixed_loss, _masked_loss
+from .mixed_activation import MixedActivation
+from .dataset import Dataset
+from .custom_loss import _mixed_loss, _masked_loss
 
 
 class MIDAS(torch.nn.Module):
@@ -45,9 +45,9 @@ class MIDAS(torch.nn.Module):
         self.mal = None
 
     def forward(self, x):
-        '''
+        """
         Forward pass through the model.
-        '''
+        """
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
         output = self.mal(decoded)
@@ -58,7 +58,7 @@ class MIDAS(torch.nn.Module):
         # data handling
         X: pd.DataFrame,
         col_convert: bool = True,
-        col_types: list[str | int] = None,
+        col_types: list = None,
         type_dict: dict = None,
         # training
         epochs: int = 75,
@@ -79,12 +79,12 @@ class MIDAS(torch.nn.Module):
             --Data--
 
             X: The data to be imputed.
-            col_convert: If True, column types are inferred from the data. 
+            col_convert: If True, column types are inferred from the data.
                 If False, you must provide col_types and type_dict.
-            col_types: A list of column types. 
-                If col_convert == False, you must provide col_types. 
+            col_types: A list of column types.
+                If col_convert == False, you must provide col_types.
                 Only used, if col_convert == False.
-            type_dict: A dictionary of column types. 
+            type_dict: A dictionary of column types.
                 If col_convert == False, you must provide type_dict.
 
             --Training hyperparameters--
@@ -186,7 +186,7 @@ class MIDAS(torch.nn.Module):
     ):
 
         if torch.cuda.is_available():
-            device = "cuda"
+            device = "gpu"
         else:
             device = "cpu"
 
@@ -230,6 +230,7 @@ class MIDAS(torch.nn.Module):
         self,
         X: np.ndarray = None,
         m: int = 5,
+        revert_cols: bool = True,
     ) -> Generator[pd.DataFrame, None, None]:
         """Yield imputations of X (or missing values) using trained MIDAS model.
 
@@ -237,10 +238,12 @@ class MIDAS(torch.nn.Module):
 
         X: The data to be imputed. If None, the model is applied to the training data.
         m: The number of imputations to generate.
+        revert_cols: If False, no transformations are applied post-imputation; binary
+            and categorical columns will be returned as logits, not probabilities.
 
         Notes:
 
-            1) The imputed values are returned as a generator of pandas DataFrames.
+            1) The imputed values are returned as a generator object.
             2) It is possible to pre-train a MIDAS model and apply it to new data by passing X.
 
         """
@@ -262,32 +265,34 @@ class MIDAS(torch.nn.Module):
                 imputed = self(torch.tensor(X.data).float()).numpy()
                 imputed[X.mask_expand] = X.data[X.mask_expand]
 
-                imputed = pd.DataFrame(imputed)
+                if revert_cols:
 
-                for i, col in enumerate(X.col_types):
-                    if col == "bin":
-                        imputed.iloc[:, i] = torch.nn.functional.sigmoid(
-                            imputed.iloc[:, i]
-                        )
-                        imputed.iloc[:, i] = np.where(
-                            imputed.iloc[:, i] > 0.5,
-                            X.type_dict[X.col_names[i]][1],
-                            X.type_dict[X.col_names[i]][0],
-                        )
+                    imputed = pd.DataFrame(imputed)
 
-                    elif isinstance(col, int):
-                        tmp_cat = [
-                            X.type_dict[X.col_names[i]][x]
-                            for x in np.argmax(
-                                imputed.iloc[:, i : i + col].to_numpy(), axis=1
+                    for i, col in enumerate(X.col_types):
+                        if col == "bin":
+                            imputed.iloc[:, i] = torch.nn.functional.sigmoid(
+                                imputed.iloc[:, i]
                             )
-                        ]
-                        imputed.drop(
-                            [j for j in range(i, i + col)], axis=1, inplace=True
-                        )
-                        imputed.insert(i, X.col_names[i], tmp_cat)
+                            imputed.iloc[:, i] = np.where(
+                                imputed.iloc[:, i] > 0.5,
+                                X.type_dict[X.col_names[i]][1],
+                                X.type_dict[X.col_names[i]][0],
+                            )
 
-                imputed.columns = X.col_names
+                        elif isinstance(col, int):
+                            tmp_cat = [
+                                X.type_dict[X.col_names[i]][x]
+                                for x in np.argmax(
+                                    imputed.iloc[:, i : i + col].to_numpy(), axis=1
+                                )
+                            ]
+                            imputed.drop(
+                                [j for j in range(i, i + col)], axis=1, inplace=True
+                            )
+                            imputed.insert(i, X.col_names[i], tmp_cat)
+
+                    imputed.columns = X.col_names
 
                 yield imputed
 

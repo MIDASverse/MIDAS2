@@ -2,7 +2,7 @@
 
 import torch
 import pandas as pd
-from processing import _format_cols
+from .processing import _format_cols
 
 class Dataset(torch.utils.data.Dataset):
     '''
@@ -14,7 +14,7 @@ class Dataset(torch.utils.data.Dataset):
     def __init__(
         self,
         data: pd.DataFrame,
-        col_types: list[str|int] = None,
+        col_types: list = None,
         type_dict: dict = None,
         col_names: list[str] = None,
     ):

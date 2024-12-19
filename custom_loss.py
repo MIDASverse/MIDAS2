@@ -6,7 +6,7 @@ from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 def _mixed_loss(
     pred: torch.tensor, 
     target: torch.tensor, 
-    col_types: list[str|int], 
+    col_types: list, 
     num_adj: float = 1, 
     cat_adj: float = 1, 
     bin_adj: float = 1, 
