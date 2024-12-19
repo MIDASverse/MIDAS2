@@ -23,3 +23,8 @@ mod.fit(X, epochs = 10)
 # Multiply impute missing data
 X_imputed = mod.transform(X, m = 10)
 ```
+
+## CHANGELOG
+
+* Renamed the main module from 'MIDAS2' to 'model' (19/12/2024)
+* Restructured the package for easier install (19/12/2024)
