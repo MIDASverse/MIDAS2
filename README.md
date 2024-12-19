@@ -12,9 +12,9 @@ In addition to migrating to `torch`, this new version adds the following functio
 The major syntactical difference to **MIDASpy** is that MIDAS2 follows the sklearn API, with fit and transform methods of an imputer object.
 
 ```python
-import MIDAS2 as md
+from MIDAS2 import model as md
 
-# Create a MIDAS object
+# Create a MIDAS model
 mod = md.MIDAS()
 
 # Fit the model to data
