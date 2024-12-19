@@ -1,6 +1,8 @@
 # MIDAS(2)
 
-**Work in progress** implementation of MIDAS in pytorch. Please note that while preliminary testing has been conducted on this implementation, it is still in the early stages of development and we cannot guarantee its performance. Documentation for the main model and methods can be found as docstrings in the `MIDAS2.py` script. 
+**Work in progress** implementation of MIDAS in pytorch.
+
+Please see the CHANGELOG below for updates on the development of this package. Please also note that while preliminary testing has been conducted on this implementation, it is still in the early stages of development and we cannot guarantee its performance. Documentation for the main model and methods can be found as docstrings in the `MIDAS2.py` script. 
 
 In addition to migrating to `torch`, this new version adds the following functionality:
 
