@@ -61,6 +61,10 @@ def _format_cols(data: pd.DataFrame):
 
             type_dict[col] = cats
 
+        elif data[col].dtype.name == "boolean":
+            col_types.append("bin")
+            col_names += [col]
+
         elif data[col].dtype.name[:5] == "float" or data[col].dtype.name[:3] == "int":
 
             if set(data[col].astype(float).unique()) == {0.0, 1.0}:
