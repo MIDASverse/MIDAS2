@@ -1,16 +1,18 @@
-'''Define custom Dataset class for handling missing data.'''
+"""Define custom Dataset class for handling missing data."""
 
 import torch
 import pandas as pd
 from .processing import _format_cols
 
+
 class Dataset(torch.utils.data.Dataset):
-    '''
+    """
     Custom PyTorch Dataset class for handling missing data.
-    
+
     If col_types is not provided, column types are inferred from the data.
-    
-    '''
+
+    """
+
     def __init__(
         self,
         data: pd.DataFrame,
@@ -19,7 +21,7 @@ class Dataset(torch.utils.data.Dataset):
         col_names: list[str] = None,
     ):
         super().__init__()
-        self.mask = ~data.isnull().to_numpy() # mask of observed values
+        self.mask = ~data.isnull().to_numpy()  # mask of observed values
 
         if col_types is None:
             self.col_names = data.columns
@@ -41,6 +43,8 @@ class Dataset(torch.utils.data.Dataset):
         x = self.data[index].copy()
         x_mask = self.mask[index]
         x_mask_expand = self.mask_expand[index]
-        x[~x_mask_expand] = 0 # set missing to 0
+        x[~x_mask_expand] = 0  # set missing to 0
 
-        return x.astype('float32'), x_mask.astype('bool') # return mask to remove from loss function
+        return x.astype("float32"), x_mask.astype(
+            "bool"
+        )  # return mask to remove from loss function

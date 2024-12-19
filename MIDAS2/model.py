@@ -257,8 +257,7 @@ class MIDAS(torch.nn.Module):
             X = self.dataset
         else:
             X = Dataset(X, col_types=self.col_types, type_dict=self.type_dict)
-
-        X.data[np.isnan(X.data)] = 0
+            X.data[np.isnan(X.data)] = 0
 
         with torch.no_grad():
             for _ in range(m):

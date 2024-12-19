@@ -23,7 +23,7 @@ mod = md.MIDAS()
 mod.fit(X, epochs = 10)
 
 # Multiply impute missing data
-X_imputed = mod.transform(X, m = 10)
+X_imputed = mod.transform(m = 10)
 ```
 
 ## CHANGELOG
