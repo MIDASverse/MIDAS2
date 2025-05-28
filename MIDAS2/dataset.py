@@ -2,7 +2,7 @@
 
 import torch
 import pandas as pd
-from .processing import _format_cols
+from .processing import _format_cols, _format_cols_test
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -19,6 +19,7 @@ class Dataset(torch.utils.data.Dataset):
         col_types: list = None,
         type_dict: dict = None,
         col_names: list[str] = None,
+        test_format: bool = False,
     ):
         super().__init__()
         self.mask = ~data.isnull().to_numpy()  # mask of observed values
@@ -30,6 +31,11 @@ class Dataset(torch.utils.data.Dataset):
             self.col_types = col_types
             self.type_dict = type_dict
             self.col_names = col_names
+
+            if test_format:
+                data = _format_cols_test(
+                    data, self.col_types, self.type_dict, self.col_names
+                )
 
         self.data = data.to_numpy()
         self.mask_expand = ~data.isnull().to_numpy()

@@ -7,6 +7,8 @@ import torch
 import numpy as np
 import pandas as pd
 
+from scipy.special import expit  # for sigmoid function
+
 from .mixed_activation import MixedActivation
 from .dataset import Dataset
 from .custom_loss import _mixed_loss, _masked_loss
@@ -43,6 +45,7 @@ class MIDAS(torch.nn.Module):
         self.encoder = None
         self.decoder = None
         self.mal = None
+        self.omit_first = None
 
     def forward(self, x):
         """
@@ -68,6 +71,8 @@ class MIDAS(torch.nn.Module):
         cat_adj: float = 1,
         bin_adj: float = 1,
         pos_adj: float = 1,
+        # CI testing
+        omit_first: bool = False,
         # utils
         verbose: bool = True,
         seed: int = None,
@@ -97,6 +102,11 @@ class MIDAS(torch.nn.Module):
             bin_adj: The loss multiplier factor for binary columns.
             pos_adj: The loss multiplier factor for positional columns.
 
+            --CI testing--
+            omit_first: If True, the first column is omitted from the model *inputs*.
+                This is useful for imputing a dataset where you do not want the outcome
+                (stored in the first column) to influence the imputation values.
+
             --Utils--
 
             verbose: If True, print the loss at each epoch.
@@ -111,6 +121,8 @@ class MIDAS(torch.nn.Module):
             random.seed(seed)
         else:
             self.seed = None
+
+        self.omit_first = omit_first
 
         ### DATA PREPROCESSING ###
         if col_convert:
@@ -139,7 +151,12 @@ class MIDAS(torch.nn.Module):
 
     def _build_model(self):
         self.encoder = torch.nn.Sequential()
-        prev_dim = self.input_dim
+
+        if self.omit_first:
+            prev_dim = self.input_dim - 1
+        else:
+            prev_dim = self.input_dim
+
         for i, hidden_dim in enumerate(self.hidden_layers):
             self.encoder.add_module(
                 f"layer_{i+1}", torch.nn.Linear(prev_dim, hidden_dim)
@@ -186,7 +203,7 @@ class MIDAS(torch.nn.Module):
     ):
 
         if torch.cuda.is_available():
-            device = "gpu"
+            device = "cuda"
         else:
             device = "cpu"
 
@@ -206,7 +223,11 @@ class MIDAS(torch.nn.Module):
                 x_corrupted = x * torch.bernoulli(torch.fill(x, corrupt_rate))
                 mask = mask.to(device)
                 optimizer.zero_grad()
-                pred = self(x_corrupted)
+
+                if self.omit_first:
+                    pred = self(x_corrupted[:, 1:])
+                else:
+                    pred = self(x_corrupted)
 
                 mixed_losses = _mixed_loss(
                     pred,
@@ -231,6 +252,7 @@ class MIDAS(torch.nn.Module):
         X: np.ndarray = None,
         m: int = 5,
         revert_cols: bool = True,
+        format_X: bool = False,
     ) -> Generator[pd.DataFrame, None, None]:
         """Yield imputations of X (or missing values) using trained MIDAS model.
 
@@ -240,6 +262,8 @@ class MIDAS(torch.nn.Module):
         m: The number of imputations to generate.
         revert_cols: If False, no transformations are applied post-imputation; binary
             and categorical columns will be returned as logits, not probabilities.
+        format_X: If True, the data is formatted to match the training data
+            (very important if you are passing in new test data for imputation!)
 
         Notes:
 
@@ -256,12 +280,23 @@ class MIDAS(torch.nn.Module):
         if X is None:
             X = self.dataset
         else:
-            X = Dataset(X, col_types=self.col_types, type_dict=self.type_dict)
-            X.data[np.isnan(X.data)] = 0
+            X = Dataset(
+                X,
+                col_types=self.dataset.col_types,
+                type_dict=self.dataset.type_dict,
+                col_names=self.dataset.col_names,
+                test_format=format_X,
+            )
+            # X.data[np.isnan(X.data)] = 0 # TODO: this is completed in Dataset so can be removed
 
         with torch.no_grad():
             for _ in range(m):
-                imputed = self(torch.tensor(X.data).float()).numpy()
+                imputed = self(
+                    torch.tensor(X.data.astype("float32"))
+                    if not self.omit_first
+                    else torch.tensor(X.data.astype("float32"))[:, 1:]
+                ).numpy()
+
                 imputed[X.mask_expand] = X.data[X.mask_expand]
 
                 if revert_cols:
@@ -270,9 +305,8 @@ class MIDAS(torch.nn.Module):
 
                     for i, col in enumerate(X.col_types):
                         if col == "bin":
-                            imputed.iloc[:, i] = torch.nn.functional.sigmoid(
-                                imputed.iloc[:, i]
-                            )
+                            imputed.iloc[:, i] = expit(imputed.iloc[:, i])
+
                             imputed.iloc[:, i] = np.where(
                                 imputed.iloc[:, i] > 0.5,
                                 X.type_dict[X.col_names[i]][1],
