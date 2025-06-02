@@ -35,6 +35,7 @@ class MIDAS(torch.nn.Module):
         self,
         hidden_layers: list[int] = [256, 128, 64],
         dropout_prob: float = 0.5,
+        device=None,
     ):
         super().__init__()
         self.hidden_layers = hidden_layers
@@ -46,6 +47,7 @@ class MIDAS(torch.nn.Module):
         self.decoder = None
         self.mal = None
         self.omit_first = None
+        self.device = device
 
     def forward(self, x):
         """
@@ -201,8 +203,9 @@ class MIDAS(torch.nn.Module):
         pos_adj=1,
         verbose=True,
     ):
-
-        if torch.cuda.is_available():
+        if self.device is not None:
+            device = self.device
+        elif torch.cuda.is_available():
             device = "cuda"
         else:
             device = "cpu"
@@ -277,6 +280,8 @@ class MIDAS(torch.nn.Module):
             np.random.seed(self.seed)
             random.seed(self.seed)
 
+        device = next(self.parameters()).device
+
         if X is None:
             X = self.dataset
         else:
@@ -291,11 +296,11 @@ class MIDAS(torch.nn.Module):
 
         with torch.no_grad():
             for _ in range(m):
-                imputed = self(
-                    torch.tensor(X.data.astype("float32"))
-                    if not self.omit_first
-                    else torch.tensor(X.data.astype("float32"))[:, 1:]
-                ).numpy()
+                input_tensor = torch.tensor(X.data.astype("float32"), device=device)
+                if self.omit_first:
+                    input_tensor = input_tensor[:, 1:]
+
+                imputed = self(input_tensor).cpu().numpy()
 
                 imputed[X.mask_expand] = X.data[X.mask_expand]
 
