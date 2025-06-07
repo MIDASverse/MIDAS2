@@ -30,10 +30,20 @@ for col in data.columns:
 
 data.iloc[0, 1] = np.nan
 
+print(data)
+
 mod = md.MIDAS()
 mod.fit(data, epochs=10, batch_size=2, seed=89)
 
-a = mod.transform(m=5)
+a = mod.transform(m=3)
 
 for df in a:
-    print(df.loc[0, "xc"])
+    print(df)
+
+assert list(df.columns) == list(
+    data.columns
+), "Column names do not match the original data."
+assert (
+    df.shape == data.shape
+), "Shape of the imputed data does not match the original data."
+assert df.isna().sum().sum() == 0, "There are still missing values in the imputed data."

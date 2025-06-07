@@ -312,11 +312,14 @@ class MIDAS(torch.nn.Module):
                         if col == "bin":
                             imputed.iloc[:, i] = expit(imputed.iloc[:, i])
 
-                            imputed.iloc[:, i] = np.where(
-                                imputed.iloc[:, i] > 0.5,
+                            tmp_bin = np.where(
+                                imputed.iloc[:, i] > 0.5,  # hard-coded threshold
                                 X.type_dict[X.col_names[i]][1],
                                 X.type_dict[X.col_names[i]][0],
                             )
+
+                            imputed.drop(imputed.columns[i], axis=1, inplace=True)
+                            imputed.insert(i, X.col_names[i], tmp_bin)
 
                         elif isinstance(col, int):
                             tmp_cat = [
