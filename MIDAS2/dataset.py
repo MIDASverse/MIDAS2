@@ -1,6 +1,7 @@
 """Define custom Dataset class for handling missing data."""
 
 import torch
+import numpy as np
 import pandas as pd
 from .processing import _format_cols, _format_cols_test
 
@@ -22,7 +23,7 @@ class Dataset(torch.utils.data.Dataset):
         test_format: bool = False,
     ):
         super().__init__()
-        self.mask = ~data.isnull().to_numpy()  # mask of observed values
+        mask_np = ~data.isnull().to_numpy()  # mask of observed values
 
         if col_types is None:
             self.col_names = data.columns
@@ -37,20 +38,26 @@ class Dataset(torch.utils.data.Dataset):
                     data, self.col_types, self.type_dict, self.col_names
                 )
 
-        self.data = data.to_numpy()
-        self.mask_expand = ~data.isnull().to_numpy()
-        self.data[~self.mask_expand] = 0
+        mask_expand_np = ~data.isnull().to_numpy()
+        data_np = data.to_numpy(dtype=np.float32, na_value=np.nan, copy=False)
+        data_np[~mask_expand_np] = 0.0
+
+        self.data = torch.as_tensor(data_np, dtype=torch.float32)
+        self.mask = torch.as_tensor(mask_np, dtype=torch.bool)
+        self.mask_expand = mask_expand_np
 
     def __len__(self):
-        return len(self.data)
+        return self.data.size(0)
 
     def __getitem__(self, index):
 
-        x = self.data[index].copy()
-        x_mask = self.mask[index]
-        x_mask_expand = self.mask_expand[index]
-        x[~x_mask_expand] = 0  # set missing to 0
+        # x = self.data[index].copy()
+        # x_mask = self.mask[index]
+        # x_mask_expand = self.mask_expand[index]
+        # x[~x_mask_expand] = 0  # set missing to 0
 
-        return x.astype("float32"), x_mask.astype(
-            "bool"
-        )  # return mask to remove from loss function
+        # return x.astype("float32"), x_mask.astype(
+        #     "bool"
+        # )  # return mask to remove from loss function
+
+        return self.data[index], self.mask[index]
