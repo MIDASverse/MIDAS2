@@ -303,6 +303,7 @@ class MIDAS(torch.nn.Module):
             )
 
         with torch.no_grad():
+            data_np = X.data.cpu().numpy()
             for _ in range(m):
                 input_tensor = X.data
                 if self.omit_first:
@@ -310,7 +311,7 @@ class MIDAS(torch.nn.Module):
 
                 imputed = self(input_tensor.to(device)).cpu().numpy()
 
-                imputed[X.mask_expand] = X.data.cpu().numpy()[X.mask_expand]
+                imputed[X.mask_expand] = data_np[X.mask_expand]
 
                 if revert_cols:
 
