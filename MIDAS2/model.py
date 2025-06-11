@@ -14,7 +14,7 @@ from scipy.special import expit  # for sigmoid function
 
 from .mixed_activation import MixedActivation
 from .dataset import Dataset
-from .custom_loss import _mixed_loss, _masked_loss, MixedLoss
+from .custom_loss import _masked_loss, MixedLoss
 
 
 class MIDAS(torch.nn.Module):
@@ -206,13 +206,7 @@ class MIDAS(torch.nn.Module):
         pos_adj=1,
         verbose=True,
     ):
-        if self.device is not None:
-            device = self.device
-        elif torch.cuda.is_available():
-            device = "cuda"
-        else:
-            device = "cpu"
-
+        device = self.device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.to(device)
 
         loss_fn = MixedLoss(
@@ -227,7 +221,9 @@ class MIDAS(torch.nn.Module):
         optimizer = torch.optim.AdamW(self.parameters(), lr=lr)
 
         dataloader = torch.utils.data.DataLoader(
-            self.dataset, batch_size=batch_size, shuffle=True
+            self.dataset,
+            batch_size=batch_size,
+            shuffle=True,
         )
 
         for epoch in range(epochs):
