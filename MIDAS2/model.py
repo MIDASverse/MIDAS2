@@ -6,12 +6,15 @@ from typing import Generator
 import torch
 import numpy as np
 import pandas as pd
+import warnings
+
+warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 from scipy.special import expit  # for sigmoid function
 
 from .mixed_activation import MixedActivation
 from .dataset import Dataset
-from .custom_loss import _mixed_loss, _masked_loss
+from .custom_loss import _mixed_loss, _masked_loss, MixedLoss
 
 
 class MIDAS(torch.nn.Module):
@@ -212,6 +215,15 @@ class MIDAS(torch.nn.Module):
 
         self.to(device)
 
+        loss_fn = MixedLoss(
+            self.dataset.col_types,
+            num_adj=num_adj,
+            cat_adj=cat_adj,
+            bin_adj=bin_adj,
+            pos_adj=pos_adj,
+            device=device,
+        )
+
         optimizer = torch.optim.AdamW(self.parameters(), lr=lr)
 
         dataloader = torch.utils.data.DataLoader(
@@ -232,15 +244,16 @@ class MIDAS(torch.nn.Module):
                 else:
                     pred = self(x_corrupted)
 
-                mixed_losses = _mixed_loss(
-                    pred,
-                    x,
-                    self.dataset.col_types,
-                    num_adj=num_adj,
-                    cat_adj=cat_adj,
-                    bin_adj=bin_adj,
-                    pos_adj=pos_adj,
-                )
+                # mixed_losses = _mixed_loss(
+                #     pred,
+                #     x,
+                #     self.dataset.col_types,
+                #     num_adj=num_adj,
+                #     cat_adj=cat_adj,
+                #     bin_adj=bin_adj,
+                #     pos_adj=pos_adj,
+                # )
+                mixed_losses = loss_fn(pred, x)
 
                 loss = _masked_loss(mixed_losses, mask)
                 loss.backward()
