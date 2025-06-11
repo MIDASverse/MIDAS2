@@ -301,11 +301,10 @@ class MIDAS(torch.nn.Module):
                 col_names=self.dataset.col_names,
                 test_format=format_X,
             )
-            # X.data[np.isnan(X.data)] = 0 # TODO: this is completed in Dataset so can be removed
 
         with torch.no_grad():
             for _ in range(m):
-                input_tensor = torch.tensor(X.data.astype("float32"), device=device)
+                input_tensor = X.data
                 if self.omit_first:
                     input_tensor = input_tensor[:, 1:]
 
