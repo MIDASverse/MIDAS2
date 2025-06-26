@@ -240,15 +240,6 @@ class MIDAS(torch.nn.Module):
                 else:
                     pred = self(x_corrupted)
 
-                # mixed_losses = _mixed_loss(
-                #     pred,
-                #     x,
-                #     self.dataset.col_types,
-                #     num_adj=num_adj,
-                #     cat_adj=cat_adj,
-                #     bin_adj=bin_adj,
-                #     pos_adj=pos_adj,
-                # )
                 mixed_losses = loss_fn(pred, x)
 
                 loss = _masked_loss(mixed_losses, mask)
@@ -338,7 +329,9 @@ class MIDAS(torch.nn.Module):
                                 )
                             ]
                             imputed.drop(
-                                [j for j in range(i, i + col)], axis=1, inplace=True
+                                [imputed.columns[j] for j in range(i, i + col)],
+                                axis=1,
+                                inplace=True,
                             )
                             imputed.insert(i, X.col_names[i], tmp_cat)
 

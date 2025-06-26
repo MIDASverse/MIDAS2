@@ -17,6 +17,14 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+requires = [
+    "statsmodel.api",
+    "numpy",
+    "pandas",
+    "scipy",
+    "torch",
+    
+]
 
 [project.urls]
 Homepage = "https://github.com/MIDASverse/MIDAS2"

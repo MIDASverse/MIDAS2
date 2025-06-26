@@ -60,4 +60,7 @@ class Dataset(torch.utils.data.Dataset):
         #     "bool"
         # )  # return mask to remove from loss function
 
-        return self.data[index], self.mask[index]
+        return (
+            self.data[index],
+            self.mask_expand[index],
+        )  # TSR: JUNE 2025 <- CHANGED THIS FROM MASK TO MASK_EXPAND
