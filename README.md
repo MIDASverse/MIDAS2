@@ -28,5 +28,6 @@ X_imputed = mod.transform(m = 10)
 
 ## CHANGELOG
 
+* Alpha release including combination rules function (26/06/2025)
 * Renamed the main module from 'MIDAS2' to 'model' (19/12/2024)
 * Restructured the package for easier install (19/12/2024)
