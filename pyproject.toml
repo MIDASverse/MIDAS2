@@ -18,7 +18,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "statsmodel",
+    "statsmodels",
     "numpy",
     "pandas",
     "scipy",
