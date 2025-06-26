@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "MIDAS2"
-version = "0.0.2"
+version = "0.1.0"
 authors = [
   { name="Thomas Robinson", email="t.robinson7@lse.ac.uk" },
   { name="Ranjit Lall", email="ranjit.lall@politics.ox.ac.uk" },
@@ -17,13 +17,12 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-requires = [
+dependencies = [
     "statsmodel.api",
     "numpy",
     "pandas",
     "scipy",
-    "torch",
-    
+    "torch", 
 ]
 
 [project.urls]
